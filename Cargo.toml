@@ -12,3 +12,4 @@ keywords     = ["HPC", "libfabric", "RDMA"]
 categories   = ["api-bindings", "network-programming"]
 
 [dependencies]
+ofi-libfabric-sys = "0.2.0"
