@@ -13,3 +13,8 @@ categories   = ["api-bindings", "network-programming"]
 
 [dependencies]
 ofi-libfabric-sys = "0.2.0"
+
+[lints.clippy]
+all      = "warn"
+pedantic = "warn"
+cargo    = "warn"
