@@ -32,6 +32,10 @@ impl FiError {
     pub(crate) const fn from_ret(rc: c_int) -> Option<Self> {
         Self::new(rc.wrapping_abs())
     }
+
+    pub(crate) fn check(rc: c_int) -> Result<(), Self> {
+        Self::from_ret(rc).map_or(Ok(()), Err)
+    }
 }
 
 impl Error for FiError {}
