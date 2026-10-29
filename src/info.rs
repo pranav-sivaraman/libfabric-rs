@@ -2,42 +2,14 @@ use std::ffi::CStr;
 use std::ptr;
 use std::ptr::NonNull;
 
-use bitflags::bitflags;
-
 use crate::errno::FiError;
+use crate::macros::fi_flags;
 
 use foreign_types::ForeignType;
 use foreign_types::ForeignTypeRef;
 use foreign_types::foreign_type;
 
 use ofi_libfabric_sys::bindgen as ffi;
-
-macro_rules! fi_flags {
-    (
-        $name:ident: $ty:ty {
-            $(
-                $(#[$($flag_meta:tt)*])*
-                $flag:ident
-            ),+ $(,)?
-        }
-    ) => {
-        bitflags! {
-            #[repr(transparent)]
-            #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-            pub struct $name: $ty {
-                $(
-                    $(#[$($flag_meta)*])*
-                    const $flag = ffi::$flag as $ty;
-                )+
-            }
-        }
-
-        $(
-            $(#[$($flag_meta)*])*
-            pub const $flag: $name = $name::$flag;
-        )+
-    };
-}
 
 // TODO: replace the C names in these flag docs with the Rust wrapper names.
 fi_flags!(FiGetInfoFlags: u64 {
