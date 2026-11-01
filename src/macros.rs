@@ -1,7 +1,7 @@
 //! Internal macros shared across the crate.
 
-/// Declares a `bitflags` type from a set of libfabric `FI_*` flag constants,
-/// along with a top-level constant for each flag.
+/// Declares a `bitflags` type from a set of libfabric `FI_*` flag constants.
+/// The flags are only exposed as associated constants on the generated type.
 macro_rules! fi_flags {
     (
         $name:ident: $ty:ty {
@@ -21,11 +21,6 @@ macro_rules! fi_flags {
                 )+
             }
         }
-
-        $(
-            $(#[$($flag_meta)*])*
-            pub const $flag: $name = $name::$flag;
-        )+
     };
 }
 
