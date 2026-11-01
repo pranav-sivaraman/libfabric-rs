@@ -33,7 +33,7 @@ foreign_type! {
 
 impl FiInfo {
     #[must_use]
-    pub fn alloc() -> Option<Self> {
+    pub fn new() -> Option<Self> {
         let ptr = unsafe { ffi::fi_allocinfo() };
         NonNull::new(ptr).map(Self)
     }
@@ -81,7 +81,7 @@ impl FiInfo {
 
 impl FiInfoRef {
     #[must_use]
-    pub fn dup(&self) -> Option<FiInfo> {
+    pub fn try_clone(&self) -> Option<FiInfo> {
         let ptr = unsafe { ffi::fi_dupinfo(self.as_ptr()) };
         NonNull::new(ptr).map(FiInfo)
     }
