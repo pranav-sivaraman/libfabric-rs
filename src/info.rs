@@ -88,6 +88,25 @@ fi_flags!(FiCaps: u64 {
     FI_WRITE,
 });
 
+fi_flags!(FiMode: u64 {
+    /// Applications can reference multiple data buffers as part of a single operation through the use of IO vectors (SGEs). Typically, the contents of an IO vector are copied by the provider into an internal buffer area, or directly to the underlying hardware. However, when a large number of IOV entries are supported, IOV buffering may have a negative impact on performance and memory consumption. The [`FI_ASYNC_IOV`](Self::FI_ASYNC_IOV) mode indicates that the application must provide the buffering needed for the IO vectors. When set, an application must not modify an IO vector of length > 1, including any related memory descriptor array, until the associated operation has completed.
+    FI_ASYNC_IOV,
+    /// Specifies that the provider requires that applications use `struct fi_context` as their per operation context parameter for operations that generated full completions. This structure should be treated as opaque to the application. For performance reasons, this structure must be allocated by the user, but may be used by the fabric provider to track the operation. Typically, users embed `struct fi_context` within their own context structure. The `struct fi_context` must remain valid until the corresponding operation completes or is successfully canceled. As such, `fi_context` should NOT be allocated on the stack. Doing so is likely to result in stack corruption that will be difficult to debug. Users should not update or interpret the fields in this structure, or reuse it until the original operation has completed. If an operation does not generate a completion (i.e. the endpoint was configured with `FI_SELECTIVE_COMPLETION` and the operation was not initiated with the `FI_COMPLETION` flag) then the context parameter is ignored by the fabric provider. The structure is specified in `rdma/fabric.h`.
+    FI_CONTEXT,
+    /// This bit is similar to [`FI_CONTEXT`](Self::FI_CONTEXT), but doubles the provider’s requirement on the size of the per context structure. When set, this specifies that the provider requires that applications use `struct fi_context2` as their per operation context parameter. Or, optionally, an application can provide an array of two `fi_context` structures (e.g. `struct fi_context[2]`) instead. The requirements for using `struct fi_context2` are identical as defined for [`FI_CONTEXT`](Self::FI_CONTEXT) above.
+    FI_CONTEXT2,
+    /// Message prefix mode indicates that an application will provide buffer space in front of all message send and receive buffers for use by the provider. Typically, the provider uses this space to implement a protocol, with the protocol headers being written into the prefix area. The contents of the prefix space should be treated as opaque. The use of [`FI_MSG_PREFIX`](Self::FI_MSG_PREFIX) may improve application performance over certain providers by reducing the number of IO vectors referenced by underlying hardware and eliminating provider buffer allocation.
+    ///
+    /// [`FI_MSG_PREFIX`](Self::FI_MSG_PREFIX) only applies to send and receive operations, including tagged sends and receives. RMA and atomics do not require the application to provide prefix buffers. Prefix buffer space must be provided with all sends and receives, regardless of the size of the transfer or other transfer options. The ownership of prefix buffers is treated the same as the corresponding message buffers, but the size of the prefix buffer is not counted toward any message limits, including inject.
+    ///
+    /// Applications that support prefix mode must supply buffer space before their own message data. The size of space that must be provided is specified by the `msg_prefix_size` endpoint attribute. Providers are required to define a `msg_prefix_size` that is a multiple of 8 bytes. Additionally, applications may receive provider generated packets that do not contain application data. Such received messages will indicate a transfer size of that is equal to or smaller than `msg_prefix_size`.
+    ///
+    /// The buffer pointer given to all send and receive operations must point to the start of the prefix region of the buffer (as opposed to the payload). For scatter-gather send/recv operations, the prefix buffer must be a contiguous region, though it may or may not be directly adjacent to the payload portion of the buffer.
+    FI_MSG_PREFIX,
+    /// This mode bit only applies to data transfers that set `FI_REMOTE_CQ_DATA`. When set, a data transfer that carries remote CQ data will consume a receive buffer at the target. This is true even for operations that would normally not consume posted receive buffers, such as RMA write operations.
+    FI_RX_CQ_DATA,
+});
+
 foreign_type! {
     pub unsafe type FiInfo
     {
@@ -159,5 +178,10 @@ impl FiInfoRef {
     #[must_use]
     pub fn caps(&self) -> FiCaps {
         FiCaps::from_bits_retain(self.as_ref().caps)
+    }
+
+    #[must_use]
+    pub fn mode(&self) -> FiMode {
+        FiMode::from_bits_retain(self.as_ref().mode)
     }
 }
