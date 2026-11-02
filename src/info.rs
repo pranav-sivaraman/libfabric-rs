@@ -107,6 +107,43 @@ fi_flags!(FiMode: u64 {
     FI_RX_CQ_DATA,
 });
 
+fi_flags!(FiAddrFormat: u32 {
+    /// Address is an Amazon Elastic Fabric Adapter (EFA) proprietary format.
+    FI_ADDR_EFA,
+    /// Address is an Intel proprietary format used with their Performance Scaled Messaging protocol version 2.
+    FI_ADDR_PSMX2,
+    /// Address is an Intel proprietary format used with their Performance Scaled Messaging protocol version 3.
+    FI_ADDR_PSMX3,
+    /// Address is a formatted character string. The length and content of the string is address and/or provider specific, but in general follows a URI model:
+    ///
+    /// ```text
+    /// address_format[://[node][:[service][/[field3]...][?[key=value][&k2=v2]...]]]
+    /// ```
+    ///
+    /// Examples:
+    ///
+    /// ```text
+    /// fi_sockaddr://10.31.6.12:7471
+    /// fi_sockaddr_in6://[fe80::6:12]:7471
+    /// fi_sockaddr://10.31.6.12:7471?qos=3
+    /// ```
+    ///
+    /// Since the string formatted address does not contain any provider information, the `prov_name` field of the fabric attribute structure should be used to filter by provider if necessary.
+    FI_ADDR_STR,
+    /// [`FI_FORMAT_UNSPEC`](Self::FI_FORMAT_UNSPEC) indicates that a provider specific address format should be selected. Provider specific addresses may be protocol specific or a vendor proprietary format. Applications that select [`FI_FORMAT_UNSPEC`](Self::FI_FORMAT_UNSPEC) should be prepared to treat returned addressing data as opaque. [`FI_FORMAT_UNSPEC`](Self::FI_FORMAT_UNSPEC) targets apps which make use of an out of band address exchange. Applications which use [`FI_FORMAT_UNSPEC`](Self::FI_FORMAT_UNSPEC) may use `fi_getname()` to obtain a provider specific address assigned to an allocated endpoint.
+    FI_FORMAT_UNSPEC,
+    /// Address is of type `sockaddr`. The specific socket address format will be determined at run time by interfaces examining the `sa_family` field.
+    FI_SOCKADDR,
+    /// Address is of type `sockaddr_ib` (defined in Linux kernel source)
+    FI_SOCKADDR_IB,
+    /// Address is of type `sockaddr_in` (IPv4).
+    FI_SOCKADDR_IN,
+    /// Address is of type `sockaddr_in6` (IPv6).
+    FI_SOCKADDR_IN6,
+    /// Address is of type `sockaddr_in` (IPv4) or `sockaddr_in6` (IPv6). The specific socket address format will be determined at run time by interfaces examining the `sa_family` field. This format is different from [`FI_SOCKADDR`](Self::FI_SOCKADDR) in that the address can only be IPv4 or IPv6, not any other socket address such as `sockaddr_ib`.
+    FI_SOCKADDR_IP,
+});
+
 foreign_type! {
     pub unsafe type FiInfo
     {
@@ -183,5 +220,10 @@ impl FiInfoRef {
     #[must_use]
     pub fn mode(&self) -> FiMode {
         FiMode::from_bits_retain(self.as_ref().mode)
+    }
+
+    #[must_use]
+    pub fn addr_format(&self) -> FiAddrFormat {
+        FiAddrFormat::from_bits_retain(self.as_ref().addr_format)
     }
 }
